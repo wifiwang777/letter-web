@@ -2,7 +2,7 @@ import service from '@/api/request';
 
 export const login = function (data) {
     return service({
-        url: "/user/login",
+        url: "/login",
         method: 'post',
         data: data
     })
@@ -10,8 +10,38 @@ export const login = function (data) {
 
 export const register = function (data) {
     return service({
-        url: "/user/register",
+        url: "/register",
         method: 'post',
         data: data
+    })
+}
+
+export const getFriends = function () {
+    return service({
+        url: "user/getFriends",
+        method: 'get'
+    })
+}
+
+export const searchUser = function (name) {
+    return service({
+        url: "user/searchUser?name=" + name,
+        method: 'get'
+    })
+}
+
+export const deleteFriend = function (uid) {
+    return service({
+        url: "user/deleteFriend",
+        method: 'post',
+        data: {"uid": uid}
+    })
+}
+
+export const addFriend = function (uid) {
+    return service({
+        url: "user/addFriend",
+        method: 'post',
+        data: {"uid": uid}
     })
 }

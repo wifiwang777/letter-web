@@ -7,7 +7,6 @@ export default {
     return {
       name: "",
       password: "",
-      token: ""
     }
   },
   methods: {
@@ -16,9 +15,9 @@ export default {
         alert("please insert username or password")
       } else {
         const res = await login(this.$data);
-        console.log(res);
         if (res.data.code === 0) {
-          this.$data.token = res.data.data
+          window.localStorage.setItem("token", res.data.data)
+          console.log(this.$data)
           await router.push({name: "index"})
         } else {
           alert(res.data.msg);
