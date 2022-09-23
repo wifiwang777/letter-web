@@ -1,5 +1,7 @@
 <script>
 import router from "@/module/route.js";
+import {login, register} from "@/api/user.js";
+import {ElMessage} from "element-plus";
 
 export default {
   data() {
@@ -25,13 +27,13 @@ export default {
     },
     async register() {
       if (this.name === "" || this.password === "") {
-        alert("please insert username or password")
+        ElMessage.error("please insert username or password")
       } else {
         let res = await register(this.$data);
         if (res.data.code === 0) {
-          alert("register success")
+          ElMessage.success("register success")
         } else {
-          alert(res.data.msg);
+          ElMessage.warning(res.data.msg)
         }
       }
     }

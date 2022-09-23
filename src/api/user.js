@@ -45,10 +45,10 @@ export const deleteFriend = function (uid) {
     })
 }
 
-export const addFriend = function (uid) {
+export const addFriend = function (data) {
     return service({
         url: "user/addFriend",
         method: 'post',
-        data: {"uid": uid}
+        data: data
     })
 }

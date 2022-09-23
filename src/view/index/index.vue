@@ -7,10 +7,12 @@
           <el-button :icon="Search" circle @click="searchFriend"/>
         </el-collapse>
         <el-table ref="searchTable" :data="searchTableData" border style="width: 100%" :hidden="searchTableHidden">
-          <el-table-column prop="uid" label="Date"/>
+          <el-table-column prop="uid" label="Uid" v-if="false"/>
           <el-table-column prop="name" label="Name"/>
-          <el-table-column label="操作">
-            <el-button type="primary" @click="addFriend">添加</el-button>
+          <el-table-column label="操作" slot="">
+            <template #default="scope">
+              <el-button type="primary" @click="newFriend(scope.row)">添加</el-button>
+            </template>
           </el-table-column>
         </el-table>
         <el-table
@@ -44,7 +46,7 @@
           </el-scrollbar>
         </el-main>
 
-        <el-footer>
+        <el-footer :hidden="currentFriend.uid===0">
           <el-input
               v-model="textarea"
               :rows="8"
@@ -63,11 +65,12 @@ import {Search} from "@element-plus/icons-vue"
 </script>
 
 <script>
-import {getFriends, searchUser} from "@/api/user.js"
+import {addFriend, getFriends, searchUser} from "@/api/user.js"
 import {getMessages} from "@/api/messages.js"
 import {ref} from "vue";
 import {decodeMessage, encodeMessage} from "@/pb/message.js";
 import {getUserinfo} from "@/module/user.js";
+import {ElMessage} from "element-plus";
 
 let ws = null;
 export default {
@@ -91,7 +94,7 @@ export default {
       if (row.uid === this.currentFriend.uid) {
         return "ss";
       }
-      return 'scrollbar-demo-item'
+      return "scrollbar-demo-item"
     },
     async tableRowClick(row) {
       this.currentFriend = row
@@ -126,8 +129,13 @@ export default {
         }
       }
     },
-    async addFriend() {
-      console.log(this.$refs.searchTable.getSelectionRows());
+    async newFriend(row) {
+      let res = await addFriend(row)
+      if (res.data.code === 0) {
+        ElMessage.success("addFriend success")
+      } else {
+        ElMessage.warning(res.data.msg)
+      }
     },
     async connectWebsocket() {
       let userinfo = await getUserinfo()
@@ -149,15 +157,23 @@ export default {
         reader.onload = (
             (event) => {
               let messagePB = decodeMessage(new Uint8Array(event.target.result))
-              this.messages = [
-                ...this.messages,
-                {
-                  fromUserId: messagePB.from,
-                  toUserId: messagePB.to,
-                  content: messagePB.content,
-                  createAt: new Date().toLocaleString()
-                }
-              ]
+              if (messagePB.from !== this.currentFriend.uid) {
+                return
+              }
+              let msg = {
+                fromUserId: messagePB.from,
+                toUserId: messagePB.to,
+                content: messagePB.content,
+                createAt: new Date().toLocaleString()
+              }
+              if (this.messages === null) {
+                this.messages = [msg];
+              } else {
+                this.messages = [
+                  ...this.messages,
+                  msg
+                ]
+              }
             }
         )
       }
@@ -173,15 +189,20 @@ export default {
         type: 1,
         content: this.textarea
       }
-      this.messages = [
-        ...this.messages,
-        {
-          fromUserId: data.from,
-          toUserId: data.to,
-          content: data.content,
-          createAt: new Date().toLocaleString()
-        }
-      ]
+      let msg = {
+        fromUserId: data.from,
+        toUserId: data.to,
+        content: data.content,
+        createAt: new Date().toLocaleString()
+      }
+      if (this.messages === null) {
+        this.messages = [msg];
+      } else {
+        this.messages = [
+          ...this.messages,
+          msg
+        ]
+      }
       let pb = encodeMessage(data)
       ws.send(pb);
     },
