@@ -1,5 +1,4 @@
 import {createRouter, createWebHashHistory} from 'vue-router'
-import user from '@/view/login/index.vue'
 
 const routes = [{
     path: '/', redirect: '/index'

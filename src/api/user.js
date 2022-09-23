@@ -1,5 +1,12 @@
 import service from '@/api/request';
 
+export const getUserInfo = function () {
+    return service({
+        url: "user/info",
+        method: 'get'
+    });
+}
+
 export const login = function (data) {
     return service({
         url: "/login",

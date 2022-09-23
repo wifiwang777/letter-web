@@ -5,18 +5,18 @@ export function encodeMessage(message) {
 }
 
 function _encodeMessage(message, bb) {
-  // optional string from = 1;
+  // optional uint32 from = 1;
   let $from = message.from;
   if ($from !== undefined) {
-    writeVarint32(bb, 10);
-    writeString(bb, $from);
+    writeVarint32(bb, 8);
+    writeVarint32(bb, $from);
   }
 
-  // optional string to = 2;
+  // optional uint32 to = 2;
   let $to = message.to;
   if ($to !== undefined) {
-    writeVarint32(bb, 18);
-    writeString(bb, $to);
+    writeVarint32(bb, 16);
+    writeVarint32(bb, $to);
   }
 
   // optional uint32 type = 3;
@@ -48,15 +48,15 @@ function _decodeMessage(bb) {
       case 0:
         break end_of_message;
 
-      // optional string from = 1;
+      // optional uint32 from = 1;
       case 1: {
-        message.from = readString(bb, readVarint32(bb));
+        message.from = readVarint32(bb) >>> 0;
         break;
       }
 
-      // optional string to = 2;
+      // optional uint32 to = 2;
       case 2: {
-        message.to = readString(bb, readVarint32(bb));
+        message.to = readVarint32(bb) >>> 0;
         break;
       }
 

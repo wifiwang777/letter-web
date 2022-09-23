@@ -1,6 +1,5 @@
 <script>
-import {login, register} from "@/api/user.js";
-import router from "@/router/index.js";
+import router from "@/module/route.js";
 
 export default {
   data() {
