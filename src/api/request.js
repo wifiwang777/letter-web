@@ -1,9 +1,10 @@
 import axios from "axios";
 
-export const host = "192.168.1.3"
+export const apiUrl = "http://192.168.1.3:8085"
+export const websocketUrl = "ws://192.168.1.3:8086"
 
 const service = axios.create({
-    baseURL: "http://" + host + ":8085"
+    baseURL: apiUrl
 })
 
 service.interceptors.request.use(config => {

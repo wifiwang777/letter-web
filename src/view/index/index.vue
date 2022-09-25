@@ -74,7 +74,7 @@ import {decodeMessage, encodeMessage} from "@/pb/message.js";
 import {clearUserInfo, getUserinfo} from "@/module/user.js";
 import {ElMessage} from "element-plus";
 import route from "@/module/route.js";
-import {host} from "@/api/request.js";
+import {websocketUrl} from "@/api/request.js";
 
 let ws = null;
 export default {
@@ -148,7 +148,7 @@ export default {
     },
     async connectWebsocket() {
       let userinfo = await getUserinfo()
-      const wsUrl = "ws://" + host + "/letter/ws?uid=" + userinfo.uid;
+      const wsUrl = websocketUrl + "/letter/ws?uid=" + userinfo.uid;
       // 实例化 WebSocket
       ws = new WebSocket(wsUrl);
       // 监听 WebSocket 连接
