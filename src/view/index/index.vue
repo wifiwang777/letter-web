@@ -24,6 +24,7 @@
           <el-table-column prop="name" itemid="uid" label="好友列表" width="280px" @click="tableRowClick"
                            align="center"/>
         </el-table>
+        <el-button @click="logOut">退出</el-button>
       </el-aside>
 
       <el-container>
@@ -52,6 +53,7 @@
               :rows="8"
               type="textarea"
               placeholder="Please input"
+              @keyup.enter.native="sendMessage"
           />
           <el-button type="success" round @click="sendMessage">发送</el-button>
         </el-footer>
@@ -69,8 +71,10 @@ import {addFriend, getFriends, searchUser} from "@/api/user.js"
 import {getMessages} from "@/api/messages.js"
 import {ref} from "vue";
 import {decodeMessage, encodeMessage} from "@/pb/message.js";
-import {getUserinfo} from "@/module/user.js";
+import {clearUserInfo, getUserinfo} from "@/module/user.js";
 import {ElMessage} from "element-plus";
+import route from "@/module/route.js";
+import {host} from "@/api/request.js";
 
 let ws = null;
 export default {
@@ -90,6 +94,11 @@ export default {
     }
   },
   methods: {
+    logOut() {
+      window.localStorage.removeItem("token")
+      clearUserInfo()
+      route.push({name: "login"})
+    },
     tableRowClassName({row}) {
       if (row.uid === this.currentFriend.uid) {
         return "ss";
@@ -139,7 +148,7 @@ export default {
     },
     async connectWebsocket() {
       let userinfo = await getUserinfo()
-      const wsUrl = "ws://localhost:8086/letter/ws?uid=" + userinfo.uid;
+      const wsUrl = "ws://" + host + "/letter/ws?uid=" + userinfo.uid;
       // 实例化 WebSocket
       ws = new WebSocket(wsUrl);
       // 监听 WebSocket 连接
@@ -205,6 +214,7 @@ export default {
       }
       let pb = encodeMessage(data)
       ws.send(pb);
+      this.textarea = ""
     },
     scrollToEnd() {
       this.$nextTick(() => {

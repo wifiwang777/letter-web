@@ -1,9 +1,13 @@
 import {getUserInfo} from "@/api/user.js";
 
-const userinfo = {
+let userinfo = {
     uid: 0,
     name: ""
 };
+
+export const clearUserInfo = () => {
+    userinfo = null
+}
 
 export const setUserInfo = async () => {
     let res = await getUserInfo();
