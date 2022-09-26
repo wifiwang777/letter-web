@@ -53,7 +53,7 @@
               :rows="8"
               type="textarea"
               placeholder="Please input"
-              @keyup.enter.native="sendMessage"
+              @keydown.enter.native="sendMessage"
           />
           <el-button type="success" round @click="sendMessage">发送</el-button>
         </el-footer>
