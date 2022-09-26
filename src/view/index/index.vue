@@ -42,7 +42,9 @@
               我:
               </span>
               {{ message.createAt }}<br/>
-              {{ message.content }}
+              <span v-for="line in message.content.split('\n')" :key="line">
+                {{ line }} <br/>
+              </span>
             </p>
           </el-scrollbar>
         </el-main>
