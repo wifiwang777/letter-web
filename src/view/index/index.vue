@@ -53,7 +53,7 @@
               :rows="8"
               type="textarea"
               placeholder="Please input"
-              @keydown.enter.native="sendMessage"
+              @keydown.enter.native="enter"
           />
           <el-button type="success" round @click="sendMessage">发送</el-button>
         </el-footer>
@@ -220,6 +220,12 @@ export default {
       this.$nextTick(() => {
         this.$refs.scrollbarRef.setScrollTop(this.$refs.scrollbarRef.wrap$.scrollHeight);
       })
+    },
+    enter(e) {
+      if (!e.shiftKey && e.keyCode === 13) {
+        e.preventDefault()
+        this.sendMessage()
+      }
     }
   },
   async mounted() {
