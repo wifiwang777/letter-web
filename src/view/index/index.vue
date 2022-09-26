@@ -1,9 +1,9 @@
 <template>
   <div class="common-layout">
     <el-container>
-      <el-aside width="300px">
+      <el-aside width="32%">
         <el-collapse>
-          <el-input v-model="searchArea" placeholder="搜索好友" style="width: 85%"/>
+          <el-input v-model="searchArea" placeholder="搜索好友" @keydown.enter.native="searchFriend" style="width: 85%"/>
           <el-button :icon="Search" circle @click="searchFriend"/>
         </el-collapse>
         <el-table ref="searchTable" :data="searchTableData" border style="width: 100%" :hidden="searchTableHidden">
@@ -21,7 +21,7 @@
             :row-class-name="tableRowClassName"
             @cell-click="tableRowClick"
         >
-          <el-table-column prop="name" itemid="uid" label="好友列表" width="280px" @click="tableRowClick"
+          <el-table-column prop="name" itemid="uid" label="好友列表"  @click="tableRowClick"
                            align="center"/>
         </el-table>
         <el-button @click="logOut">退出</el-button>
@@ -29,7 +29,7 @@
 
       <el-container>
         <el-header>
-          {{ currentFriend.name }}
+          当前聊天:{{ currentFriend.name }}
         </el-header>
 
         <el-main>

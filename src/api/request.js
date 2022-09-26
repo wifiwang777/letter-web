@@ -1,7 +1,8 @@
 import axios from "axios";
 
-export const apiUrl = "http://localhost:8085"
-export const websocketUrl = "ws://localhost:8086"
+const ip = window.location.hostname
+export const apiUrl = "http://" + ip + ":8085"
+export const websocketUrl = "ws://" + ip + ":8086"
 
 const service = axios.create({
     baseURL: apiUrl
