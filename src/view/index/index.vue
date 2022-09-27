@@ -3,7 +3,8 @@
     <el-container>
       <el-aside width="32%">
         <el-collapse>
-          <el-input v-model="searchArea" placeholder="搜索好友" @keydown.enter.native="searchFriend" style="width: 85%"/>
+          <el-input v-model="searchArea" placeholder="搜索好友" @keydown.enter.native="searchFriend"
+                    style="width: 85%"/>
           <el-button :icon="Search" circle @click="searchFriend"/>
         </el-collapse>
         <el-table ref="searchTable" :data="searchTableData" border style="width: 100%" :hidden="searchTableHidden">
@@ -21,7 +22,7 @@
             :row-class-name="tableRowClassName"
             @cell-click="tableRowClick"
         >
-          <el-table-column prop="name" itemid="uid" label="好友列表"  @click="tableRowClick"
+          <el-table-column prop="name" itemid="uid" label="好友列表" @click="tableRowClick"
                            align="center"/>
         </el-table>
         <el-button @click="logOut">退出</el-button>
@@ -51,8 +52,8 @@
 
         <el-footer :hidden="currentFriend.uid===0">
           <el-input
-              v-model="textarea"
-              :rows="8"
+              v-model="sendContent"
+              :rows="5"
               type="textarea"
               placeholder="Please input"
               @keydown.enter.native="enter"
@@ -82,7 +83,7 @@ let ws = null;
 export default {
   data() {
     return {
-      textarea: "",
+      sendContent: "",
       searchArea: "",
       searchTableHidden: true,
       searchTableData: ref([]),
@@ -198,7 +199,7 @@ export default {
         from: userinfo.uid,
         to: this.currentFriend.uid,
         type: 1,
-        content: this.textarea
+        content: this.sendContent
       }
       let msg = {
         fromUserId: data.from,
@@ -216,7 +217,7 @@ export default {
       }
       let pb = encodeMessage(data)
       ws.send(pb);
-      this.textarea = ""
+      this.sendContent = ""
     },
     scrollToEnd() {
       this.$nextTick(() => {
@@ -240,7 +241,7 @@ export default {
     messages(newName, oldName) {
       this.scrollToEnd();
     }
-  },
+  }
 }
 </script>
 

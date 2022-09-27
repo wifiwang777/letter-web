@@ -18,7 +18,6 @@ export default {
         const res = await login(this.$data);
         if (res.data.code === 0) {
           window.localStorage.setItem("token", res.data.data)
-          console.log(this.$data)
           await router.push({name: "index"})
         } else {
           alert(res.data.msg);

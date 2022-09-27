@@ -6,7 +6,10 @@ let userinfo = {
 };
 
 export const clearUserInfo = () => {
-    userinfo = null
+    userinfo = {
+        uid: 0,
+        name: ""
+    }
 }
 
 export const setUserInfo = async () => {
