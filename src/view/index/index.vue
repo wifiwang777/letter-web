@@ -79,11 +79,11 @@ import {ElMessage} from "element-plus";
 import route from "@/module/route.js";
 import {websocketUrl} from "@/api/request.js";
 
+const sendContent = ref("")
 let ws = null;
 export default {
   data() {
     return {
-      sendContent: "",
       searchArea: "",
       searchTableHidden: true,
       searchTableData: ref([]),
@@ -199,7 +199,7 @@ export default {
         from: userinfo.uid,
         to: this.currentFriend.uid,
         type: 1,
-        content: this.sendContent
+        content: sendContent.value
       }
       let msg = {
         fromUserId: data.from,
@@ -217,7 +217,7 @@ export default {
       }
       let pb = encodeMessage(data)
       ws.send(pb);
-      this.sendContent = ""
+      sendContent.value = ""
     },
     scrollToEnd() {
       this.$nextTick(() => {
