@@ -7,7 +7,7 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "tauri_vue",
+    "productName": "letter",
     "version": "0.0.0"
   },
   "tauri": {
@@ -58,7 +58,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "tauri_vue",
+        "title": "letter",
         "width": 800
       }
     ]
