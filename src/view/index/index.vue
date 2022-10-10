@@ -22,8 +22,17 @@
             :row-class-name="tableRowClassName"
             @cell-click="tableRowClick"
         >
-          <el-table-column prop="name" itemid="uid" label="好友列表" @click="tableRowClick"
-                           align="center"/>
+          <el-table-column prop="name" itemid="uid" label="好友列表" align="center"/>
+          <el-table-column label="" width="80">
+            <template #default="scope">
+              <el-popconfirm title="确定要删除吗?" @confirm="mDeleteFriend(scope.row)">
+                <template #reference>
+                  <el-button type="danger" :icon="Delete" circle/>
+                </template>
+              </el-popconfirm>
+            </template>
+          </el-table-column>
+
         </el-table>
         <el-button @click="logOut">退出</el-button>
       </el-aside>
@@ -66,11 +75,11 @@
 </template>
 
 <script setup>
-import {Search} from "@element-plus/icons-vue"
+import {Search, Delete} from "@element-plus/icons-vue"
 </script>
 
 <script>
-import {addFriend, getFriends, searchUser} from "@/api/user.js"
+import {addFriend, deleteFriend, getFriends, searchUser} from "@/api/user.js"
 import {getMessages} from "@/api/messages.js"
 import {ref} from "vue";
 import {decodeMessage, encodeMessage} from "@/pb/message.js";
@@ -108,7 +117,10 @@ export default {
       }
       return "scrollbar-demo-item"
     },
-    async tableRowClick(row) {
+    async tableRowClick(row, column) {
+      if (column.label !== "好友列表") {
+        return
+      }
       this.currentFriend = row
       let res = await getMessages(row.uid)
       if (res.data.code === 0) {
@@ -141,10 +153,27 @@ export default {
         }
       }
     },
+    async getFriendList() {
+      let res = await getFriends()
+      if (res.data.code === 0) {
+        this.friends = res.data.data
+      }
+    },
     async newFriend(row) {
       let res = await addFriend(row)
       if (res.data.code === 0) {
         ElMessage.success("addFriend success")
+        await this.getFriendList()
+      } else {
+        ElMessage.warning(res.data.msg)
+      }
+    },
+    async mDeleteFriend(row) {
+      console.log(row)
+      let res = await deleteFriend(row.uid)
+      if (res.data.code === 0) {
+        ElMessage.success("deleteFriend success")
+        await this.getFriendList()
       } else {
         ElMessage.warning(res.data.msg)
       }
@@ -232,10 +261,7 @@ export default {
     }
   },
   async mounted() {
-    let res = await getFriends()
-    if (res.data.code === 0) {
-      this.friends = res.data.data
-    }
+    await this.getFriendList()
   },
   watch: {
     messages(newName, oldName) {
