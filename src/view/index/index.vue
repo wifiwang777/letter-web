@@ -88,12 +88,12 @@ import {ElMessage} from "element-plus";
 import route from "@/module/route.js";
 import {websocketUrl} from "@/api/request.js";
 
+const searchArea = ref("")
 const sendContent = ref("")
 let ws = null;
 export default {
   data() {
     return {
-      searchArea: "",
       searchTableHidden: true,
       searchTableData: ref([]),
       currentFriend: {
@@ -134,7 +134,7 @@ export default {
     async searchFriend() {
       let userInfo = await getUserinfo()
       this.searchTableData = [];
-      let res = await searchUser(this.searchArea)
+      let res = await searchUser(searchArea.value)
       if (res.data.code === 0) {
         this.searchTableHidden = false;
         let searchRes = res.data.data
