@@ -1,7 +1,12 @@
 <template>
   <div class="common-layout">
     <el-container>
-      <el-aside width="32%">
+      <el-aside width="32%" style="border-width: 1px">
+        <div style="">
+          <div class="left"></div>
+          <div class="right"></div>
+        </div>
+        <el-avatar :src="getAvatar(user)" size="large"/>
         <el-collapse>
           <el-input v-model="searchArea" placeholder="搜索好友" @keydown.enter.native="searchFriend"
                     style="width: 85%"/>
@@ -22,7 +27,12 @@
             :row-class-name="tableRowClassName"
             @cell-click="tableRowClick"
         >
-          <el-table-column prop="name" itemid="uid" label="好友列表" align="center"/>
+          <el-table-column prop="name" itemid="uid" label="好友列表" align="center">
+            <template #default="scope">
+              <el-avatar :src="getAvatar(scope.row)" size="default"/>
+              <span style="font-size: 20px">{{ scope.row.name }}</span>
+            </template>
+          </el-table-column>
           <el-table-column label="" width="80">
             <template #default="scope">
               <el-popconfirm title="确定要删除吗?" @confirm="mDeleteFriend(scope.row)">
@@ -44,18 +54,28 @@
 
         <el-main>
           <el-scrollbar ref="scrollbarRef" max-height="400px" always>
-            <p v-for="message in messages" :key="message" class="scrollbar-demo-item">
+            <div v-for="message in messages" :key="message">
               <span v-if="message.fromUserId===currentFriend.uid">
-                 {{ currentFriend.name }}:
+                <p class="scrollbar-demo-item"
+                   style="background-color: whitesmoke;width: 250px; text-align: center; margin-right: auto">
+                 <el-avatar :src="getAvatar(currentFriend)" size="default"></el-avatar>
+                  <span style="font-size: smaller">{{ message.createAt }}</span> <br/>
+                  <span v-for="line in message.content.split('\n')" :key="line">
+                  {{ line }} <br/>
+                  </span>
+                </p>
               </span>
               <span v-else>
-              我:
+                <p class="scrollbar-demo-item"
+                   style="background-color: #66CC99;width: 250px; text-align: center; margin-left: auto">
+                <el-avatar :src="getAvatar(user)" size="default"></el-avatar>
+                  <span style="font-size: smaller">{{ message.createAt }}</span> <br/>
+                  <span v-for="line in message.content.split('\n')" :key="line">
+                  {{ line }} <br/>
+                  </span>
+                </p>
               </span>
-              {{ message.createAt }}<br/>
-              <span v-for="line in message.content.split('\n')" :key="line">
-                {{ line }} <br/>
-              </span>
-            </p>
+            </div>
           </el-scrollbar>
         </el-main>
 
@@ -83,13 +103,14 @@ import {addFriend, deleteFriend, getFriends, searchUser} from "@/api/user.js"
 import {getMessages} from "@/api/messages.js"
 import {ref} from "vue";
 import {decodeMessage, encodeMessage} from "@/pb/message.js";
-import {clearUserInfo, getUserinfo} from "@/module/user.js";
+import {clearUserInfo, userInfo} from "@/module/user.js";
 import {ElMessage} from "element-plus";
 import route from "@/module/route.js";
-import {websocketUrl} from "@/api/request.js";
+import {websocketUrl, apiUrl} from "@/api/request.js";
 
 const searchArea = ref("")
 const sendContent = ref("")
+const user = await userInfo()
 let ws = null;
 export default {
   data() {
@@ -98,11 +119,11 @@ export default {
       searchTableData: ref([]),
       currentFriend: {
         uid: 0,
-        name: ""
+        name: "",
+        avatar: ""
       },
       friends: ref([]),
-      messages: ref([]),
-
+      messages: ref([])
     }
   },
   methods: {
@@ -132,7 +153,7 @@ export default {
       await this.connectWebsocket()
     },
     async searchFriend() {
-      let userInfo = await getUserinfo()
+      let user = await userInfo()
       this.searchTableData = [];
       let res = await searchUser(searchArea.value)
       if (res.data.code === 0) {
@@ -141,7 +162,7 @@ export default {
         let searchLen = searchRes.length
 
         for (let i = 0; i < searchLen; i++) {
-          if (searchRes[i].name !== userInfo.name) {
+          if (searchRes[i].name !== user.name) {
             this.searchTableData = [
               ...this.searchTableData,
               {
@@ -179,8 +200,8 @@ export default {
       }
     },
     async connectWebsocket() {
-      let userinfo = await getUserinfo()
-      const wsUrl = websocketUrl + "/letter/ws?uid=" + userinfo.uid;
+      let user = await userInfo()
+      const wsUrl = websocketUrl + "/letter/ws?uid=" + user.uid;
       // 实例化 WebSocket
       ws = new WebSocket(wsUrl);
       // 监听 WebSocket 连接
@@ -223,9 +244,9 @@ export default {
       }
     },
     async sendMessage() {
-      let userinfo = await getUserinfo()
+      let user = await userInfo()
       let data = {
-        from: userinfo.uid,
+        from: user.uid,
         to: this.currentFriend.uid,
         type: 1,
         content: sendContent.value
@@ -258,6 +279,9 @@ export default {
         e.preventDefault()
         this.sendMessage()
       }
+    },
+    getAvatar(user) {
+      return apiUrl + "/file/" + user.avatar
     }
   },
   async mounted() {
