@@ -2,11 +2,48 @@
   <div class="common-layout">
     <el-container>
       <el-aside width="32%" style="border-width: 1px">
-        <div style="">
-          <div class="left"></div>
-          <div class="right"></div>
-        </div>
-        <el-avatar :src="getAvatar(user)" size="large"/>
+        <el-popover
+            placement="bottom"
+            trigger="click"
+            :width="300"
+        >
+          <template #reference>
+            <el-avatar :src="getAvatar(user)" size="default"/>
+          </template>
+          <template #default>
+            <div style="width: 400px">
+              <div style="display:flex; align-items: center;">
+                <span>用户名: {{ user.name }}</span>
+                <el-avatar style="margin-left: 35%" :src="getAvatar(user)" size="default" @click="showImageView=true"/>
+                <el-dialog append-to-body="append-to-body" v-model="showImageView" width="77%"
+                           @close="showImageView=false">
+                  <img w-full :src="getAvatar(user)" alt="Preview Image"/>
+                </el-dialog>
+              </div>
+              <div>
+                更换头像：
+                <el-upload
+                    ref="uploadRef"
+                    list-type="picture-card"
+                    :auto-upload="false"
+                    :action="apiUrl+'/file'"
+                    :headers="{'x-token': user.token}"
+                    :limit="1"
+                    :on-change="setHaveFile"
+                >
+                  <el-icon>
+                    <UploadFilled/>
+                  </el-icon>
+                  <template #file="{file}">
+                    <img class="el-upload-list__item-thumbnail" :src="file.url" alt=""/>
+                  </template>
+                </el-upload>
+                <el-button type="primary" round @click="uploadAvatar">提交</el-button>
+              </div>
+            </div>
+          </template>
+        </el-popover>
+
         <el-collapse>
           <el-input v-model="searchArea" placeholder="搜索好友" @keydown.enter.native="searchFriend"
                     style="width: 85%"/>
@@ -29,8 +66,10 @@
         >
           <el-table-column prop="name" itemid="uid" label="好友列表" align="center">
             <template #default="scope">
-              <el-avatar :src="getAvatar(scope.row)" size="default"/>
-              <span style="font-size: 20px">{{ scope.row.name }}</span>
+              <div style="font-size: 20px; display:flex; align-items: center; margin-left: 40%">
+                <el-avatar :src="getAvatar(scope.row)" size="default"/>&nbsp;
+                <span>{{ scope.row.name }}</span>
+              </div>
             </template>
           </el-table-column>
           <el-table-column label="" width="80">
@@ -54,27 +93,49 @@
 
         <el-main>
           <el-scrollbar ref="scrollbarRef" max-height="400px" always>
+            <teleport to="body">
+              <el-dialog
+                  v-model="showFriendImageView"
+                  width="77%"
+                  @close="showFriendImageView=false"
+              >
+                <img w-full :src="getAvatar(currentFriend)" alt="Preview Image"/>
+              </el-dialog>
+            </teleport>
             <div v-for="message in messages" :key="message">
-              <span v-if="message.fromUserId===currentFriend.uid">
-                <p class="scrollbar-demo-item"
-                   style="background-color: whitesmoke;width: 250px; text-align: center; margin-right: auto">
-                 <el-avatar :src="getAvatar(currentFriend)" size="default"></el-avatar>
+              <div v-if="message.fromUserId===currentFriend.uid">
+                <div class="scrollbar-demo-item"
+                     style="background-color: whitesmoke;width: 250px; text-align: center; margin-right: auto">
+                  <el-popover
+                      placement="bottom"
+                      trigger="click"
+                  >
+                    <template #reference>
+                      <el-avatar :src="getAvatar(currentFriend)" size="default"/>
+                    </template>
+                    <div style="display:flex; align-items: center;">
+                      <span>用户名: {{ currentFriend.name }}</span>
+                      <el-avatar style="margin-left: 10%" :src="getAvatar(currentFriend)" size="default"
+                                 @click="showFriendImageView=true"/>
+                    </div>
+                  </el-popover>
                   <span style="font-size: smaller">{{ message.createAt }}</span> <br/>
                   <span v-for="line in message.content.split('\n')" :key="line">
                   {{ line }} <br/>
                   </span>
-                </p>
-              </span>
-              <span v-else>
-                <p class="scrollbar-demo-item"
-                   style="background-color: #66CC99;width: 250px; text-align: center; margin-left: auto">
-                <el-avatar :src="getAvatar(user)" size="default"></el-avatar>
+                </div>
+              </div>
+              <div v-else>
+                <div class="scrollbar-demo-item"
+                     style="background-color: #66CC99;width: 250px; text-align: center; margin-left: auto">
+                  <el-avatar :src="getAvatar(user)" size="default"></el-avatar>
+
                   <span style="font-size: smaller">{{ message.createAt }}</span> <br/>
                   <span v-for="line in message.content.split('\n')" :key="line">
                   {{ line }} <br/>
                   </span>
-                </p>
-              </span>
+                </div>
+              </div>
             </div>
           </el-scrollbar>
         </el-main>
@@ -95,7 +156,7 @@
 </template>
 
 <script setup>
-import {Search, Delete} from "@element-plus/icons-vue"
+import {Search, Delete, UploadFilled} from "@element-plus/icons-vue"
 </script>
 
 <script>
@@ -110,7 +171,7 @@ import {websocketUrl, apiUrl} from "@/api/request.js";
 
 const searchArea = ref("")
 const sendContent = ref("")
-const user = await userInfo()
+let user = await userInfo()
 let ws = null;
 export default {
   data() {
@@ -123,7 +184,10 @@ export default {
         avatar: ""
       },
       friends: ref([]),
-      messages: ref([])
+      messages: ref([]),
+      showImageView: false,
+      showFriendImageView: false,
+      haveFile: false
     }
   },
   methods: {
@@ -282,6 +346,17 @@ export default {
     },
     getAvatar(user) {
       return apiUrl + "/file/" + user.avatar
+    },
+    uploadAvatar() {
+      if (!this.haveFile) {
+        ElMessage.warning("please select file")
+        return
+      }
+      this.$refs.uploadRef.submit()
+      ElMessage.success("update avatar success")
+    },
+    setHaveFile(...file) {
+      this.haveFile = true;
     }
   },
   async mounted() {
