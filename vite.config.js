@@ -1,10 +1,17 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { posix } from "path";
+import topLevelAwait from "vite-plugin-top-level-await"
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+    plugins: [
+        vue(),
+        topLevelAwait({
+            promiseExportName: '__tla',
+            promiseImportName: i => `__tla_${i}`
+        })
+    ],
 
   // Vite optons tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   // prevent vite from obscuring rust errors
