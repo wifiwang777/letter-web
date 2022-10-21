@@ -265,7 +265,7 @@ export default {
     },
     async connectWebsocket() {
       let user = await userInfo()
-      const wsUrl = websocketUrl + "/letter/ws?uid=" + user.uid;
+      const wsUrl = websocketUrl + "/letter/ws/" + user.uid;
       // 实例化 WebSocket
       ws = new WebSocket(wsUrl);
       // 监听 WebSocket 连接
