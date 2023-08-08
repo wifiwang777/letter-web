@@ -1,3 +1,13 @@
+export const encodeMessageType = {
+  Msg: 0,
+  Notify: 1,
+};
+
+export const decodeMessageType = {
+  0: "Msg",
+  1: "Notify",
+};
+
 export function encodeMessage(message) {
   let bb = popByteBuffer();
   _encodeMessage(message, bb);
@@ -19,11 +29,11 @@ function _encodeMessage(message, bb) {
     writeVarint32(bb, $to);
   }
 
-  // optional uint32 type = 3;
+  // optional MessageType type = 3;
   let $type = message.type;
   if ($type !== undefined) {
     writeVarint32(bb, 24);
-    writeVarint32(bb, $type);
+    writeVarint32(bb, encodeMessageType[$type]);
   }
 
   // optional string content = 4;
@@ -60,9 +70,9 @@ function _decodeMessage(bb) {
         break;
       }
 
-      // optional uint32 type = 3;
+      // optional MessageType type = 3;
       case 3: {
-        message.type = readVarint32(bb) >>> 0;
+        message.type = decodeMessageType[readVarint32(bb)];
         break;
       }
 

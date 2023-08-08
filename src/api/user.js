@@ -52,3 +52,12 @@ export const addFriend = function (data) {
         data: data
     })
 }
+
+
+export const acceptFriend = function (data) {
+    return service({
+        url: "user/acceptFriend",
+        method: 'post',
+        data: data
+    })
+}

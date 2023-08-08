@@ -52,6 +52,11 @@
         <el-table ref="searchTable" :data="searchTableData" border style="width: 100%" :hidden="searchTableHidden">
           <el-table-column prop="uid" label="Uid" v-if="false"/>
           <el-table-column prop="name" label="Name"/>
+          <el-table-column label="" slot="">
+            <template #default="scope">
+              <el-avatar :src="getAvatar(scope.row)" size="default"/>
+            </template>
+          </el-table-column>
           <el-table-column label="操作" slot="">
             <template #default="scope">
               <el-button type="primary" @click="newFriend(scope.row)">添加</el-button>
@@ -160,12 +165,12 @@ import {Search, Delete, UploadFilled} from "@element-plus/icons-vue"
 </script>
 
 <script>
-import {addFriend, deleteFriend, getFriends, searchUser} from "@/api/user.js"
+import {addFriend, deleteFriend, getFriends, searchUser, acceptFriend} from "@/api/user.js"
 import {getMessages} from "@/api/messages.js"
 import {ref} from "vue";
-import {decodeMessage, encodeMessage} from "@/pb/message.js";
+import {decodeMessage, decodeMessageType, encodeMessage, encodeMessageType} from "@/pb/message.js";
 import {clearUserInfo, userInfo} from "@/module/user.js";
-import {ElMessage} from "element-plus";
+import {ElMessage, ElMessageBox} from "element-plus";
 import route from "@/module/route.js";
 import {websocketUrl, apiUrl} from "@/api/request.js";
 
@@ -184,6 +189,7 @@ export default {
         avatar: ""
       },
       friends: ref([]),
+      newFriends: ref([]),
       messages: ref([]),
       showImageView: false,
       showFriendImageView: false,
@@ -211,10 +217,6 @@ export default {
       if (res.data.code === 0) {
         this.messages = res.data.data
       }
-      if (ws != null) {
-        return
-      }
-      await this.connectWebsocket()
     },
     async searchFriend() {
       let user = await userInfo()
@@ -232,6 +234,7 @@ export default {
               {
                 uid: searchRes[i].uid,
                 name: searchRes[i].name,
+                avatar: searchRes[i].avatar
               }
             ];
           }
@@ -247,7 +250,7 @@ export default {
     async newFriend(row) {
       let res = await addFriend(row)
       if (res.data.code === 0) {
-        ElMessage.success("addFriend success")
+        ElMessage.success("sent make friend request")
         await this.getFriendList()
       } else {
         ElMessage.warning(res.data.msg)
@@ -266,23 +269,46 @@ export default {
     async connectWebsocket() {
       let user = await userInfo()
       const wsUrl = websocketUrl + "/letter/ws/" + user.uid;
-      // 实例化 WebSocket
       ws = new WebSocket(wsUrl);
-      // 监听 WebSocket 连接
       ws.onopen = function () {
-
+        console.log("ws connected!")
       }
-      // 监听 WebSocket 错误信息
       ws.onerror = (message) => {
         console.log(message)
       }
-      // 监听 WebSocket 消息
       ws.onmessage = (message) => {
         let reader = new FileReader();
         reader.readAsArrayBuffer(message.data);
         reader.onload = (
             (event) => {
               let messagePB = decodeMessage(new Uint8Array(event.target.result))
+              if (messagePB.type === decodeMessageType[encodeMessageType.Notify]) {
+                ElMessageBox.confirm(
+                    messagePB.content,
+                    'Info',
+                    {
+                      confirmButtonText: 'OK',
+                      cancelButtonText: 'Cancel',
+                      type: 'info',
+                    }
+                ).then(() => {
+                  acceptFriend({uid: messagePB.from}).then((res) => {
+                    if (res.data.code === 0) {
+                      ElMessage.success("add friend success")
+                      this.getFriendList()
+                    } else {
+                      ElMessage.warning(res.data.msg)
+                    }
+                  })
+                }).catch(() => {
+                  ElMessage({
+                    type: 'info',
+                    message: 'add new friend canceled',
+                  })
+                })
+                return;
+              }
+
               if (messagePB.from !== this.currentFriend.uid) {
                 return
               }
@@ -312,7 +338,7 @@ export default {
       let data = {
         from: user.uid,
         to: this.currentFriend.uid,
-        type: 1,
+        type: encodeMessageType.Msg,
         content: sendContent.value
       }
       let msg = {
@@ -360,7 +386,8 @@ export default {
     }
   },
   async mounted() {
-    await this.getFriendList()
+    await this.getFriendList();
+    await this.connectWebsocket()
   },
   watch: {
     messages(newName, oldName) {
